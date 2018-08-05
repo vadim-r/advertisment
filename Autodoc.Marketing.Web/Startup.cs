@@ -1,17 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Autodoc.Marketing.Data.Interfaces;
+using Autodoc.Marketing.Data.SqlServer.Implementations;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Rewrite;
 using Microsoft.AspNetCore.SpaServices.AngularCli;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
+using System;
+using System.Text;
 
 namespace Autodoc.Marketing.Web
 {
@@ -33,6 +31,31 @@ namespace Autodoc.Marketing.Web
             {
                 configuration.RootPath = "ClientApp/dist";
             });
+
+            services.AddAuthentication(authOptions =>
+                {
+                    authOptions.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+                    authOptions.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                    authOptions.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                }
+            ).AddJwtBearer(jwtBearerOptions =>
+                {
+                    jwtBearerOptions.SaveToken = true;
+                    jwtBearerOptions.RequireHttpsMetadata = false;
+                    jwtBearerOptions.TokenValidationParameters = new TokenValidationParameters()
+                    {
+                        ValidAudience = Configuration["Auth:Jwt:Audience"],
+                        ValidIssuer = Configuration["Auth:Jwt:Issuer"],
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["Auth:Jwt:Key"])),
+                        ClockSkew = TimeSpan.Zero,
+                        RequireExpirationTime = true,
+                        ValidateAudience = true,
+                        ValidateIssuer = true,
+                        ValidateIssuerSigningKey = true
+                    };
+                });
+
+            services.AddTransient<IMarketingService, MarketingService>(s => new MarketingService(Configuration["Connection:ConnectionString"]));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -48,7 +71,24 @@ namespace Autodoc.Marketing.Web
             }
 
             app.UseHttpsRedirection();
+
+            if (false)
+            {
+                var staticFilesOptions = new StaticFileOptions()
+                {
+                    OnPrepareResponse = context =>
+                    {
+                    // When Development, disable caching for all static files.
+                    context.Context.Response.Headers["Cache-Control"] =
+                            Configuration["StaticFiles:Headers:Cache-Control"];
+                        context.Context.Response.Headers["Pragma"] = Configuration["StaticFiles:Headers:Pragma"];
+                        context.Context.Response.Headers["Expires"] = Configuration["StaticFiles:Headers:Expires"];
+                    }
+                };
+            }
+
             app.UseStaticFiles();
+
             app.UseSpaStaticFiles();
 
             app.UseMvc(routes =>
