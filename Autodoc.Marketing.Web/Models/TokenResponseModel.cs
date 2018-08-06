@@ -11,5 +11,8 @@ namespace Autodoc.Marketing.Web.Models
         public bool Success { get; set; }
         public int Expiration { get; set; }
         public string Message { get; set; }
+		public string Name { get; set; }
+		public int Id { get; set; }
+		public string Email { get; set; }
     }
 }

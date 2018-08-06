@@ -37,7 +37,7 @@ namespace Autodoc.Marketing.Web.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
             
-            var authResult = await _marketingService.Auth(new Data.Models.AuthRequest { UserName = tokenRequest.UserName, Password = tokenRequest.Password });
+            var authResult = await _marketingService.Auth(new AuthRequest { UserName = tokenRequest.UserName, Password = tokenRequest.Password });
 
             if (!authResult.Authenticated)
                 return Unauthorized();
@@ -76,7 +76,10 @@ namespace Autodoc.Marketing.Web.Controllers
                 {
                     Token = token,
                     Expiration = expirationInMinutes,
-                    Success = true
+                    Success = true,
+					Id = appUser.Id,
+					Name = appUser.Name,
+					Email = appUser.Email
                 };
             }
             catch(Exception ex)
