@@ -12,7 +12,8 @@ namespace Autodoc.Marketing.Web.Models
         public int Expiration { get; set; }
         public string Message { get; set; }
 		public string Name { get; set; }
-		public int Id { get; set; }
+		public string Id { get; set; }
 		public string Email { get; set; }
-    }
+		public string RefreshToken { get; set; }
+	}
 }
